@@ -13,7 +13,7 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
-    "@prisma/client": "^6.7.0",
+    "@prisma/client": "^6.9.0",
     "@types/node-fetch": "^2.6.12",
     "@types/socket.io-client": "^1.4.36",
     "ethers": "^5.7.2",
