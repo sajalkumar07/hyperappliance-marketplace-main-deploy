@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with multi-chain wallet support
+model User {
+  id                String       @id @default(cuid())
+  username          String?      @unique
+  bio               String?
+  profileImageUrl   String?
+  ethAddress        String?      @unique // Ethereum/EVM wallet address
+  cardanoAddress    String?      @unique // Cardano wallet address
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  // Relations
+  aimsCreated       AIM[]        @relation("Creator")
+  aimsOwned         AIM[]        @relation("Owner")
+  hyperBoxes        HyperBox[]
+  sentMessages      Message[]    @relation("SentMessages")
+  receivedMessages  Message[]    @relation("ReceivedMessages")
+  deployments       Deployment[]
+
+  @@index([ethAddress])
+  @@index([cardanoAddress])
+}
+
+// AIM model representing an AI Module
+model AIM {
+  id                String      @id @default(cuid())
+  name              String
+  description       String      @db.Text
+  manifestUrl       String?     // URL to the AIM manifest or IPFS hash
+  requiredSpecs     Json?       // JSON object containing required hardware specs
+  licenseType       String      // "open", "purchase", "subscription"
+  price             Float?      // Price if not free
+  currency          String?     // ETH, MATIC, ADA, etc.
+  tokenContract     String?     // NFT contract address if tokenized
+  tokenId           String?     // NFT token ID if tokenized
+  chain             String?     // Ethereum, Polygon, Cardano, etc.
+  status            String      // available, sold, etc.
+  imageUrl          String?     // Cover image for the AIM
+  repoUrl           String?     // (optional) source repo URL if open-source catalog item
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  // Relations
+  creatorId         String
+  creator           User        @relation("Creator", fields: [creatorId], references: [id])
+  ownerId           String?
+  owner             User?       @relation("Owner", fields: [ownerId], references: [id])
+  deployments       Deployment[]
+
+  @@index([creatorId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([chain])
+}
+
+// HyperBox model representing compute nodes
+model HyperBox {
+  id                String      @id @default(cuid())
+  name              String
+  specsCpu          String
+  specsGpu          String
+  specsRam          String      // in GB
+  specsStorage      String      // in GB
+  bandwidth         String?
+  location          String?     // region/country
+  pricePerHour      Float
+  currency          String      // ETH, MATIC, ADA, etc.
+  available         Boolean     @default(true)
+  walletAddress     String?     // Owner's wallet address that verified the HyperBox
+  ipAddress         String?     // IP or domain of the HyperBox (possibly encrypted)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  // Relations
+  ownerId           String
+  owner             User        @relation(fields: [ownerId], references: [id])
+  deployments       Deployment[]
+
+  @@index([ownerId])
+  @@index([available])
+  @@index([location])
+}
+
+// Deployment model for tracking AIM deployments on HyperBoxes
+model Deployment {
+  id                String      @id @default(cuid())
+  status            String      // pending, running, completed, failed
+  startTime         DateTime    @default(now())
+  endTime           DateTime?
+  nodeEndpointUrl   String?     // URL where the deployed AIM is accessible
+  aimInstanceId     String?     // Identifier for the deployed AIM instance
+  lastActivity      DateTime    @default(now())
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  // Relations
+  aimId             String
+  aim               AIM         @relation(fields: [aimId], references: [id])
+  hyperBoxId        String
+  hyperBox          HyperBox    @relation(fields: [hyperBoxId], references: [id])
+  userId            String
+  user              User        @relation(fields: [userId], references: [id])
+
+  @@index([aimId])
+  @@index([hyperBoxId])
+  @@index([userId])
+  @@index([status])
+}
+
+// Message model for the messaging system
+model Message {
+  id                String      @id @default(cuid())
+  content           String      @db.Text
+  read              Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  
+  // Relations
+  senderId          String
+  sender            User        @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId        String
+  receiver          User        @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([read])
+} 
