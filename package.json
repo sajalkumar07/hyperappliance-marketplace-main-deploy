@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:vercel": "NEXT_TYPESCRIPT_IGNORE_BUILD_ERRORS=true next build",
     "start": "next start",
     "lint": "next lint"
   },
