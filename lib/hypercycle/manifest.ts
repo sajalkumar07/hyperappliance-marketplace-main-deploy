@@ -4,14 +4,26 @@
 
 export interface SuggestedCost {
   currency: string; // e.g. "USDC"
-  amount: number;   // integer micro-units (1 USDC = 1_000_000)
+  amount: number; // integer micro-units (1 USDC = 1_000_000)
   description?: string;
 }
+
+// export interface ManifestMeta {
+//   name: string;
+//   short_name: string;
+//   version: string;
+//   documentation_url?: string;
+//   license?: string;
+//   terms_of_service?: string;
+//   author?: string;
+//   suggested_costs?: Record<string, SuggestedCost>;
+// }
 
 export interface ManifestMeta {
   name: string;
   short_name: string;
   version: string;
+  description?: string; // ✅ Add this
   documentation_url?: string;
   license?: string;
   terms_of_service?: string;
@@ -44,9 +56,15 @@ export interface AIMEndpoint {
   endpoint_manifest: EndpointManifest;
 }
 
+// export interface AIMManifest extends ManifestMeta {
+//   endpoints?: AIMEndpoint[]; // not strictly required but helpful
+//   // any extra arbitrary metadata keys are allowed
+//   [key: string]: unknown;
+// }
+
 export interface AIMManifest extends ManifestMeta {
-  endpoints?: AIMEndpoint[]; // not strictly required but helpful
-  // any extra arbitrary metadata keys are allowed
+  imageUrl?: string; // ✅ Add this
+  endpoints?: AIMEndpoint[];
   [key: string]: unknown;
 }
 
@@ -55,13 +73,13 @@ export interface AIMManifest extends ManifestMeta {
  * ------------------------------------------------------------------*/
 
 function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function isAIMManifest(payload: unknown): payload is AIMManifest {
   if (!isObject(payload)) return false;
-  const required = ['name', 'short_name', 'version'];
-  return required.every((k) => typeof payload[k] === 'string');
+  const required = ["name", "short_name", "version"];
+  return required.every((k) => typeof payload[k] === "string");
 }
 
 /**
@@ -74,4 +92,4 @@ export function parseManifest(raw: unknown): AIMManifest | null {
     return raw;
   }
   return null;
-} 
+}
